@@ -26,7 +26,6 @@ const MainApp = ({ currentUser, onLogout }) => {
   const fallbackPumpId = currentUser?.accessiblePumps?.[0] || 'p1';
   const [userPumps, setUserPumps] = useState([{ id: fallbackPumpId, name: currentUser?.pumpName || 'Loading...', role: currentUser?.role || 'Admin' }]);
   const [activePumpId, setActivePumpId] = useState(fallbackPumpId);
-  
   const activePump = userPumps.find(p => p.id === activePumpId) || userPumps[0];
   const [hardware, setHardware] = useState(activePump?.hardware || []);
 
@@ -48,7 +47,6 @@ const MainApp = ({ currentUser, onLogout }) => {
   // FETCH DATA
   useEffect(() => {
     if (!currentUser?.tenantId) return;
-    // Fetch Pumps
     const unsubPumps = onSnapshot(collection(db, "pumps"), (snap) => {
       let pumps = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.tenantId === currentUser.tenantId);
       if (currentUser.role !== 'Admin') pumps = pumps.filter(p => currentUser.accessiblePumps?.includes(p.id));
@@ -61,8 +59,6 @@ const MainApp = ({ currentUser, onLogout }) => {
     });
 
     if (!activePumpId) return;
-    
-    // Helper for Org Data
     const fetchCol = (colName, setter) => {
       return onSnapshot(query(collection(db, colName), where('orgId', '==', activePumpId)), (snap) => {
         const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -96,23 +92,18 @@ const MainApp = ({ currentUser, onLogout }) => {
     await setDoc(doc(db, colName, docId), { ...data, date: activeDate, ...getBaseDoc() });
   };
 
-  // FIXED DELETE FUNCTION
   const deleteDbRecord = async () => {
     if (!deleteModal) return;
     try {
       await deleteDoc(doc(db, deleteModal.type, deleteModal.id));
-      showAlert('Deleted successfully!', 'success');
+      showAlert('Deleted Successfully.', 'success'); // CLEAN MESSAGE
     } catch (e) { showAlert(e.message, 'error'); }
     setDeleteModal(null);
   };
-  const confirmDelete = (type, id, name) => setDeleteModal({ type, id, name });
 
-  // TOGGLE USER STATUS (Block/Unblock)
   const toggleUserStatus = async (id, currentStatus) => {
-    try {
-      await updateDoc(doc(db, "users", id), { isActive: !currentStatus });
-      showAlert(`User ${!currentStatus ? 'Activated' : 'Deactivated'}!`, 'success');
-    } catch (e) { showAlert(e.message, 'error'); }
+    try { await updateDoc(doc(db, "users", id), { isActive: !currentStatus }); showAlert(`User Status Updated!`, 'success'); } 
+    catch (e) { showAlert(e.message, 'error'); }
   };
 
   const handleAddNewPump = async (e) => {
@@ -126,10 +117,9 @@ const MainApp = ({ currentUser, onLogout }) => {
     const updatedPumps = [...(currentUser.accessiblePumps || []), newPumpRef.id];
     await updateDoc(doc(db, "users", currentUser.uid), { accessiblePumps: updatedPumps });
     currentUser.accessiblePumps = updatedPumps; 
-    setShowAddPumpModal(false); showAlert("New Pump Added!", "success"); setActivePumpId(newPumpRef.id);
+    setShowAddPumpModal(false); showAlert("Pump Added!", "success"); setActivePumpId(newPumpRef.id);
   };
 
-  // LOCAL STATES
   const [fuelPrices, setFuelPrices] = useState({ petrol: 96.72, diesel: 89.62, isEditing: false });
   const [openings, setOpenings] = useState({});
   const [closings, setClosings] = useState({});
@@ -142,13 +132,13 @@ const MainApp = ({ currentUser, onLogout }) => {
     setOpenings(newOpenings); setClosings({});
     const tmrw = new Date(activeDate); tmrw.setDate(tmrw.getDate() + 1);
     setActiveDate(tmrw.toISOString().split('T')[0]);
-    showAlert('Sales logged. Date advanced.', 'success');
+    showAlert('Shift Saved.', 'success');
   };
 
   const updateHardware = async (newHardware) => {
     setHardware(newHardware);
     await updateDoc(doc(db, "pumps", activePumpId), { hardware: newHardware });
-    showAlert('Hardware Updated!', 'success');
+    showAlert('Config Updated.', 'success');
   };
 
   return (
@@ -170,9 +160,10 @@ const MainApp = ({ currentUser, onLogout }) => {
         {activeTab === 'density' && <DensityTab densityRecords={densityRecords} onAddDensity={(data) => setUniqueDailyRecord('density', data)} activeDate={activeDate} showAlert={showAlert} />}
         {activeTab === 'indent' && <IndentTab indents={indents} onPlaceIndent={(data) => addDbRecord('indents', data)} onReceiveIndent={(id, data) => updateDbRecord('indents', id, data)} activeDate={activeDate} showAlert={showAlert} />}
         {activeTab === 'attendance' && <DailyAttendance employees={employees} dailyAttendance={dailyAttendance} setDailyAttendance={setDailyAttendance} onLockAttendance={(data) => setUniqueDailyRecord('attendance', data)} activeDate={activeDate} showAlert={showAlert} />}
-        {activeTab === 'manage_staff' && <StaffMaster employees={employees} onAddEmployee={(data) => addDbRecord('staff', data)} confirmDelete={(id, name) => confirmDelete('staff', id, name)} showAlert={showAlert} />}
-        {activeTab === 'credit_ledger' && <UdhaarTab customers={customers} onAddCustomer={(data) => addDbRecord('customers', data)} onUpdateCustomer={(id, data) => updateDbRecord('customers', id, data)} activeDate={activeDate} showAlert={showAlert} confirmDelete={(id, name) => confirmDelete('customers', id, name)} />}
-        {activeTab === 'expenses' && <ExpensesTab expenses={expenses} onAddExpense={(data) => addDbRecord('expenses', data)} activeDate={activeDate} confirmDelete={(id, name) => confirmDelete('expenses', id, name)} showAlert={showAlert} />}
+        {/* FIXED: Passing confirmDelete properly */}
+        {activeTab === 'manage_staff' && <StaffMaster employees={employees} onAddEmployee={(data) => addDbRecord('staff', data)} confirmDelete={(id, name) => setDeleteModal({ type: 'staff', id, name })} showAlert={showAlert} />}
+        {activeTab === 'credit_ledger' && <UdhaarTab customers={customers} onAddCustomer={(data) => addDbRecord('customers', data)} onUpdateCustomer={(id, data) => updateDbRecord('customers', id, data)} activeDate={activeDate} showAlert={showAlert} confirmDelete={(id, name) => setDeleteModal({ type: 'customers', id, name })} />}
+        {activeTab === 'expenses' && <ExpensesTab expenses={expenses} onAddExpense={(data) => addDbRecord('expenses', data)} activeDate={activeDate} confirmDelete={(id, name) => setDeleteModal({ type: 'expenses', id, name })} showAlert={showAlert} />}
         {activeTab === 'subscription' && <Subscription currentUser={currentUser} />}
         {activeTab === 'pump_settings' && <PumpSettings hardware={hardware} setHardware={updateHardware} showAlert={showAlert} />}
         {activeTab === 'app_users' && <AppUsersTab appUsers={appUsers} userPumps={userPumps} currentUser={currentUser} showAlert={showAlert} onToggleStatus={toggleUserStatus} />}
@@ -190,7 +181,6 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // AUTH PERSISTENCE LOGIC
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -201,12 +191,12 @@ export default function App() {
       } else {
         setCurrentUser(null);
       }
-      setLoading(false); // Loading khatam
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-bold">Connecting to Cloud...</div>;
+  if (loading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-bold">Resuming Session...</div>;
   if (!currentUser) return <Auth onLogin={setCurrentUser} />;
   return <MainApp currentUser={currentUser} onLogout={() => { auth.signOut(); setCurrentUser(null); }} />;
 }
