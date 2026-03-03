@@ -3,11 +3,11 @@ import { Gauge, Users, Truck, IndianRupee, ShieldCheck, Droplet, Fuel, CreditCar
 
 export const Layout = ({ currentUser, activeTab, setActiveTab, onLogout, children, recordsOpen, setRecordsOpen, userPumps, activePump, setActivePumpId, onTriggerAddPump }) => {
   const [showPumpDropdown, setShowPumpDropdown] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // NEW: Mobile drawer state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleTabSwitch = (id) => {
     setActiveTab(id);
-    setIsMobileMenuOpen(false); // Close mobile menu on tab click
+    setIsMobileMenuOpen(false); // Tab click karne ke baad menu apne aap band ho jayega
   };
 
   const NavItem = ({ id, label, icon, badge, disabled }) => {
@@ -28,7 +28,7 @@ export const Layout = ({ currentUser, activeTab, setActiveTab, onLogout, childre
   return (
     <div className="min-h-screen flex bg-[#f1f5f9] font-sans w-full overflow-x-hidden">
       
-      {/* ── MOBILE OVERLAY ── */}
+      {/* ── MOBILE BLUR OVERLAY ── */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 bg-black/60 z-[90] md:hidden backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
       )}
@@ -41,7 +41,7 @@ export const Layout = ({ currentUser, activeTab, setActiveTab, onLogout, childre
               <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shrink-0"><Fuel size={18} className="text-white" /></div>
               <div><p className="text-white font-black text-base tracking-tight leading-none">FuelDesk</p><p className="text-slate-500 text-[10px] font-semibold mt-0.5">by Ekta Management</p></div>
             </div>
-            {/* Close button for mobile */}
+            {/* Close button for mobile menu */}
             <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden text-slate-400 hover:text-white p-1 bg-white/10 rounded-lg"><X size={18}/></button>
           </div>
 
@@ -50,8 +50,8 @@ export const Layout = ({ currentUser, activeTab, setActiveTab, onLogout, childre
               <div className="flex items-start gap-2.5">
                 <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center shrink-0 mt-0.5"><Building2 size={14} className="text-blue-400" /></div>
                 <div className="min-w-0">
-                  <p className="text-white font-bold text-sm truncate leading-tight" title={activePump?.name}>{activePump?.name || currentUser?.pumpName || "Loading..."}</p>
-                  <p className="text-slate-400 text-[11px] font-semibold mt-1 truncate">{currentUser.name} • {activePump?.role || currentUser.role}</p>
+                  <p className="text-white font-bold text-sm truncate leading-tight" title={activePump?.name}>{activePump?.name || currentUser?.pumpName}</p>
+                  <p className="text-slate-400 text-[11px] font-semibold mt-1 truncate">{currentUser?.name} • {activePump?.role || currentUser?.role}</p>
                 </div>
               </div>
               <ChevronDown size={14} className="text-slate-400 shrink-0" />
@@ -63,7 +63,7 @@ export const Layout = ({ currentUser, activeTab, setActiveTab, onLogout, childre
                     <Building2 size={14} className="text-slate-500" /> {pump.name}
                   </button>
                 ))}
-                {currentUser.role === 'Admin' && (
+                {currentUser?.role === 'Admin' && (
                   <button onClick={() => { onTriggerAddPump(); setShowPumpDropdown(false); setIsMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 text-xs font-bold text-blue-400 hover:bg-slate-700 transition-all border-t border-slate-700">+ Add New Pump</button>
                 )}
               </div>
@@ -71,7 +71,7 @@ export const Layout = ({ currentUser, activeTab, setActiveTab, onLogout, childre
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-2 overflow-y-auto">
+        <nav className="flex-1 px-3 py-2 overflow-y-auto pb-20">
           <p className="px-3.5 pt-5 pb-1.5 text-[10px] font-black text-slate-600 uppercase tracking-widest">Operations</p>
           <NavItem id="sales" label="Sales & Shift" icon={<Gauge size={16} />} />
           <NavItem id="density" label="Daily Density" icon={<Droplet size={16} />} />
@@ -110,7 +110,7 @@ export const Layout = ({ currentUser, activeTab, setActiveTab, onLogout, childre
 
       {/* ── MAIN CONTENT ── */}
       <main className="flex-1 flex flex-col min-h-screen w-full min-w-0">
-        {/* MOBILE TOP HEADER (With Menu Button) */}
+        {/* MOBILE TOP HEADER */}
         <div className="md:hidden sticky top-0 z-40 border-b border-slate-800 px-4 py-3.5 flex items-center justify-between shadow-md" style={{ background: '#0c1427' }}>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"><Fuel size={16} className="text-white" /></div>
@@ -119,9 +119,9 @@ export const Layout = ({ currentUser, activeTab, setActiveTab, onLogout, childre
               <span className="text-slate-400 text-[10px] font-semibold truncate max-w-[140px] mt-0.5">{activePump?.name || currentUser?.pumpName}</span>
             </div>
           </div>
-          {/* Hamburger Icon */}
+          {/* Hamburger Menu Icon */}
           <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-slate-300 hover:bg-white/10 rounded-lg transition-colors">
-            <Menu size={22} />
+            <Menu size={24} />
           </button>
         </div>
         
